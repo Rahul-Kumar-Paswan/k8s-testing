@@ -6,9 +6,10 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
 spec:
   rules:
-  - host: rahulverse.example.com
+  - host: rahulverse.example.com   # You can later map to ALB DNS
     http:
       paths:
       - path: /

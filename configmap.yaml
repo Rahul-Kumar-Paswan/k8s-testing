@@ -7,4 +7,4 @@ data:
   DB_HOST: "mysql"
   DB_PORT: "3306"
   DB_NAME: "rahulverseDB"
-  DB_USER: "root"
+  DB_USER: "Rahul"

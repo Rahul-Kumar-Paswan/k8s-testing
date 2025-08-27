@@ -51,9 +51,11 @@ metadata:
   name: rahulverse-app
   namespace: rahulverse-prod
 spec:
-  type: ClusterIP
   selector:
     app: rahulverse-app
   ports:
-  - port: 8089
-    targetPort: 8089
+    - protocol: TCP
+      port: 80
+      targetPort: 8089
+  type: LoadBalancer
+
