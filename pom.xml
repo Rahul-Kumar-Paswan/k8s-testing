@@ -70,14 +70,14 @@
 
 	<distributionManagement>
 		<repository>
-			<id>nexus-releases</id>
-			<name>Nexus Releases Repository</name>
-			<url>http://nexus.example.com/repository/maven-releases/</url>
+			<id>maven-releases</id>
+			<name>Maven Releases Repository</name>
+			<url>http://3.109.3.226:8081/repository/maven-releases/</url>
 		</repository>
 		<snapshotRepository>
-			<id>nexus-snapshots</id>
-			<name>Nexus Snapshots Repository</name>
-			<url>http://nexus.example.com/repository/maven-snapshots/</url>
+			<id>maven-snapshots</id>
+			<name>Maven Snapshots Repository</name>
+			<url>http://3.109.3.226:8081/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
