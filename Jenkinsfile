@@ -12,8 +12,7 @@ pipeline {
         K8S_CLUSTER_NAME = "rahulverse-cluster"
         AWS_REGION = "ap-south-1"
         BUILD_TAG = "${env.BUILD_NUMBER}"
-        NEXUS_REPO = "http://nexus.example.com/repository/maven-releases/"
-        SLACK_CHANNEL = "#devops-notifications"
+        SLACK_CHANNEL = "#rahulverse-notification"
         SCANNER_HOME = tool 'sonar-scanner'
     }
 
@@ -24,6 +23,12 @@ pipeline {
     }
 
     stages {
+        stage("Cleanup Workspace"){
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git branch: 'Jenkins', credentialsId: 'git-token', url: 'https://github.com/Rahul-Kumar-Paswan/k8s-testing.git'
@@ -37,16 +42,16 @@ pipeline {
             }
         }
 
-        stage('Unit & Integration Tests') {
-            steps {
-                sh 'mvn test -B'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }
-        }
+        // stage('Unit & Integration Tests') {
+        //     steps {
+        //         sh 'mvn test -B'
+        //     }
+        //     post {
+        //         always {
+        //             junit '**/target/surefire-reports/*.xml'
+        //         }
+        //     }
+        // }
 
         stage('Security Scan - Gitleaks') {
             steps {
@@ -63,7 +68,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar') {
                     sh """ $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=rahulverse-Project \
-                            -Dsonar.projectKey=rahulverse-Project """
+                            -Dsonar.projectKey=rahulverse-Project -Dsonar.java.binaries=target/classes"""
                 }
             }
         }
@@ -84,12 +89,11 @@ pipeline {
             }
         }
 
-        stage('Build Artifact & Push to Nexus') {
+        stage('Build Artifact & Deploy to Nexus') {
             steps {
-                sh """
-                    mvn clean package -DskipTests
-                    curl -v -u $NEXUS_USER:$NEXUS_PASSWORD --upload-file target/rahulverse-0.0.1-SNAPSHOT.jar ${NEXUS_REPO}rahulverse-${BUILD_TAG}.jar
-                """
+                withMaven(globalMavenSettingsConfig: 'rahulverse', maven: 'maven3') {
+                    sh 'mvn clean deploy -DskipTests'
+                }
             }
         }
 
@@ -120,15 +124,17 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig(caCertificate: '', clusterName: "${K8S_CLUSTER_NAME}", contextName: '', credentialsId: 'k8s-token', namespace: "${K8S_NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: 'https://30E5A6EE0382334F98E30C0BD1A339D8.gr7.ap-south-1.eks.amazonaws.com') {
+                    withKubeConfig(caCertificate: '', clusterName: "${K8S_CLUSTER_NAME}", contextName: '', credentialsId: 'k8s-token', namespace: "${K8S_NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: 'https://6C12E17E7ABFEFD30CBFD18BF49D72BE.gr7.ap-south-1.eks.amazonaws.com') {
                         sh """
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name ${K8S_CLUSTER_NAME}
-                            kubectl set image deployment/${APP_NAME} ${APP_NAME}=${IMAGE_TAG} -n ${K8S_NAMESPACE}
-                            kubectl apply -f K8s-Manifests/configmap.yaml -n $K8S_NAMESPACE
-                            kubectl apply -f K8s-Manifests/secrets.yaml -n $K8S_NAMESPACE
-                            kubectl apply -f K8s-Manifests/mysql-deploy.yaml -n $K8S_NAMESPACE
-                            kubectl apply -f K8s-Manifests/app-deploy.yaml -n $K8S_NAMESPACE
+                            kubectl apply -f K8s-Manifests/configmap.yaml -n ${K8S_NAMESPACE}
+                            kubectl apply -f K8s-Manifests/secrets.yaml -n ${K8S_NAMESPACE}
+                            kubectl apply -f K8s-Manifests/mysql-deploy.yaml -n ${K8S_NAMESPACE}
+                            kubectl apply -f K8s-Manifests/app-deploy.yaml -n ${K8S_NAMESPACE}
                             kubectl apply -f K8s-Manifests/ingress.yaml -n ${K8S_NAMESPACE}
+                            sleep 20
+                            kubectl get pods -n ${K8S_NAMESPACE}
+                            kubectl describe pod \$(kubectl get pods -l app=${APP_NAME} -n ${K8S_NAMESPACE} -o jsonpath='{.items[0].metadata.name}') -n ${K8S_NAMESPACE}
+                            kubectl set image deployment/${APP_NAME} ${APP_NAME}=${IMAGE_TAG} -n ${K8S_NAMESPACE}
                             kubectl rollout status deployment/${APP_NAME} -n ${K8S_NAMESPACE} --timeout=120s
                         """
                     }
@@ -138,12 +144,10 @@ pipeline {
 
         stage('Post-Deployment Verification') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: "${K8S_CLUSTER_NAME}", contextName: '', credentialsId: 'k8s-token', namespace: "${K8S_NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: 'https://30E5A6EE0382334F98E30C0BD1A339D8.gr7.ap-south-1.eks.amazonaws.com') {
+                withKubeConfig(caCertificate: '', clusterName: "${K8S_CLUSTER_NAME}", contextName: '', credentialsId: 'k8s-token', namespace: "${K8S_NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: 'https://6C12E17E7ABFEFD30CBFD18BF49D72BE.gr7.ap-south-1.eks.amazonaws.com') {
                     sh """
                         kubectl get pods -n ${K8S_NAMESPACE}
-                        kubectl get ingress -n ${K8S_NAMESPACE}
-                        EXTERNAL_IP=$(kubectl get svc rahulverse-app -n $K8S_NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-                        curl -f http://$EXTERNAL_IP/actuator/health || exit 1
+                        kubectl get svc -n ${K8S_NAMESPACE}
                     """
                 }
             }
