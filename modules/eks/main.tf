@@ -27,10 +27,10 @@ data "aws_iam_policy_document" "eks_assume_role" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "eks_cluster_ebs_policy" {
-  role       = aws_iam_role.eks_cluster_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-}
+# resource "aws_iam_role_policy_attachment" "eks_cluster_ebs_policy" {
+#   role       = aws_iam_role.eks_cluster_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+# }
 
 resource "aws_eks_addon" "ebs_csi_driver" {
   cluster_name    = aws_eks_cluster.rahulverse_eks.name
@@ -49,7 +49,7 @@ resource "aws_eks_node_group" "worker_nodes" {
   cluster_name    = aws_eks_cluster.rahulverse_eks.name
   node_group_name = "${var.eks_cluster_name}-nodes"
   node_role_arn   = aws_iam_role.eks_node_role.arn
-  subnet_ids      = var.private_subnet_ids
+  subnet_ids      = var.public_subnet_ids
 
   scaling_config {
     desired_size = var.desired_worker_count
