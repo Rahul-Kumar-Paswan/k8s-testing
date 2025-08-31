@@ -46,18 +46,18 @@ output "nexus_private_ip" {
 # ==========================
 # EKS Outputs
 # ==========================
-output "eks_cluster_name" {
-  value = module.eks.eks_cluster_name
-}
+# output "eks_cluster_name" {
+#   value = module.eks.eks_cluster_name
+# }
 
-output "eks_cluster_endpoint" {
-  value = module.eks.eks_cluster_endpoint
-}
+# output "eks_cluster_endpoint" {
+#   value = module.eks.eks_cluster_endpoint
+# }
 
-output "eks_cluster_arn" {
-  value = module.eks.eks_cluster_arn
-}
+# output "eks_cluster_arn" {
+#   value = module.eks.eks_cluster_arn
+# }
 
-output "node_group_name" {
-  value = module.eks.node_group_name
-}
+# output "node_group_name" {
+#   value = module.eks.node_group_name
+# }
