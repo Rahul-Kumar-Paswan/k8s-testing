@@ -31,14 +31,14 @@ module "ec2_instances" {
   public_subnet_ids  = module.vpc.public_subnet_ids
 }
 
-# module "eks" {
-#   source                = "./modules/eks"
-#   eks_cluster_name      = var.eks_cluster_name
-#   eks_version           = var.eks_version
-#   public_subnet_ids     = module.vpc.public_subnet_ids
-#   private_subnet_ids    = module.vpc.private_subnet_ids
-#   desired_worker_count  = var.desired_worker_count
-#   min_worker_count      = var.min_worker_count
-#   max_worker_count      = var.max_worker_count
-#   node_instance_type    = var.node_instance_type
-# }
+module "eks" {
+  source                = "./modules/eks"
+  eks_cluster_name      = var.eks_cluster_name
+  eks_version           = var.eks_version
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  private_subnet_ids    = module.vpc.private_subnet_ids
+  desired_worker_count  = var.desired_worker_count
+  min_worker_count      = var.min_worker_count
+  max_worker_count      = var.max_worker_count
+  node_instance_type    = var.node_instance_type
+}
