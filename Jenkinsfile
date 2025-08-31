@@ -23,7 +23,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 withCredentials([
-                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    file(credentialsId: 'prod-tfvars', variable: 'TFVARS_FILE'),
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
                 ]) {
                     sh '''
@@ -39,7 +39,7 @@ pipeline {
             }
             steps {
                 withCredentials([
-                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    file(credentialsId: 'prod-tfvars', variable: 'TFVARS_FILE'),
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
                 ]) {
                     sh '''
@@ -56,7 +56,7 @@ pipeline {
             }
             steps {
                 withCredentials([
-                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    file(credentialsId: 'prod-tfvars', variable: 'TFVARS_FILE'),
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
                 ]) {
                     sh '''
@@ -70,7 +70,7 @@ pipeline {
         stage('Terraform Outputs') {
             steps {
                 withCredentials([
-                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    file(credentialsId: 'prod-tfvars', variable: 'TFVARS_FILE'),
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
                 ]) {
                     sh '''
