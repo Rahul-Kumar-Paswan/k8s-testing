@@ -5,6 +5,14 @@ pipeline {
         AWS_REGION = "ap-south-1"
     }
 
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['create', 'destroy'],
+            description: 'Select whether to CREATE or DESTROY resources'
+        )
+    }
+
     stages {
         stage('Checkout Terraform Code') {
             steps {
@@ -12,11 +20,29 @@ pipeline {
             }
         }
 
-        stage('Terraform Apply') {
+        stage('Terraform Init') {
             steps {
-                withCredentials([file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE')]) {
+                withCredentials([
+                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
+                ]) {
                     sh '''
                         terraform init
+                    '''
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            when {
+                expression { params.ACTION == 'create' }
+            }
+            steps {
+                withCredentials([
+                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
+                ]) {
+                    sh '''
                         terraform plan -var-file=$TFVARS_FILE
                         terraform apply -auto-approve -var-file=$TFVARS_FILE
                     '''
@@ -24,11 +50,33 @@ pipeline {
             }
         }
 
-        stage('Export EKS Info') {
+        stage('Terraform Destroy') {
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
             steps {
-                script {
-                    env.K8S_CLUSTER_URL = sh(script: "terraform output -raw eks_cluster_endpoint", returnStdout: true).trim()
-                    env.K8S_CLUSTER_CA  = sh(script: "terraform output -raw eks_cluster_ca", returnStdout: true).trim()
+                withCredentials([
+                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
+                ]) {
+                    sh '''
+                        terraform plan -destroy -var-file=$TFVARS_FILE
+                        terraform destroy -auto-approve -var-file=$TFVARS_FILE
+                    '''
+                }
+            }
+        }
+
+        stage('Terraform Outputs') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'dev-tfvars', variable: 'TFVARS_FILE'),
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-cred']
+                ]) {
+                    sh '''
+                        echo "==== Final Terraform Outputs for ACTION=$ACTION ===="
+                        terraform output || echo "No outputs available (resources may be destroyed)"
+                    '''
                 }
             }
         }
