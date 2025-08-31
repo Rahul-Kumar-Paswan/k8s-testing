@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout Terraform Code') {
             steps {
-                git branch: 'Jenkins', credentialsId: 'git-token', url: 'https://github.com/Rahul-Kumar-Paswan/k8s-testing.git'
+                git branch: 'terraform', credentialsId: 'git-token', url: 'https://github.com/Rahul-Kumar-Paswan/k8s-testing.git'
             }
         }
 
