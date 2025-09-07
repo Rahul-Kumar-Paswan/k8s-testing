@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rahulverse-app
+  namespace: rahulverse-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rahulverse-app
+  template:
+    metadata:
+      labels:
+        app: rahulverse-app
+    spec:
+      containers:
+        - name: rahulverse-app
+          image: rahulkumarpaswan/rahulverse-app:latest
+          ports:
+            - containerPort: 8089
+          env:
+            - name: DB_HOST
+              value: mysql
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_DATABASE
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rahulverse-app
+  namespace: rahulverse-prod
+spec:
+  selector:
+    app: rahulverse-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8089
+  type: LoadBalancer

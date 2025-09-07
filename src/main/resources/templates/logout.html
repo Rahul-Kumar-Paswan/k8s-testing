@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Logout - Rahulverse</title>
+</head>
+<body>
+
+<!-- Include header fragment -->
+<div th:replace="fragments/header :: header"></div>
+
+<main class="container mt-5">
+    <h2>You have been logged out successfully.</h2>
+    <a th:href="@{/login}">Login Again</a>
+</main>
+
+<!-- Include footer fragment -->
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>
